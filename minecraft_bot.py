@@ -31,7 +31,7 @@ async def startserver(ctx):
         await ctx.send("Attempting to start minecraft server")
         os.chdir("/home/president/minecraft/minecraft_server_1.21.4")
         result = subprocess.Popen(["java", "-Xmx4096M", "-Xms4096M", "-jar", "minecraft_server.jar", "nogui"])
-        await ctx.send("Server is starting")
+        await ctx.send("Server started")
     except Exception as e:
         await ctx.send("Failed to start server, check if the server is already running")
 
