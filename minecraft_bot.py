@@ -4,6 +4,21 @@ import discord
 import os, subprocess # default module
 from discord.ext import commands
 from dotenv import load_dotenv
+import pika
+import aio_pika
+import asyncio
+
+async def receive_message_queue():
+    connection = await aio_pika.connect_robust('amqp://guest:guest@localhost/')
+    async with connection:
+        channel = await connection.channel()
+        queue = await channel.declare_queue("mc_status")
+
+        async with queue.iterator() as queue_iter:
+            async for message in queue_iter:
+                async with message.process():
+                    await bot.get_channel(1321172413060481175).send("Server is going offline")
+                    await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
 
 
 load_dotenv("/home/president/minecraft/.env")
@@ -17,6 +32,7 @@ bot = commands.Bot(command_prefix="!",intents=intents) # prefix is the bot comma
 async def on_ready():
     await bot.tree.sync()
     await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
+    await receive_message_queue()
     print(f"{bot.user} is ready and online!")
 
 @bot.hybrid_command(name="help_mc")
@@ -40,5 +56,8 @@ async def startserver(ctx):
 @bot.hybrid_command(name="status")
 async def status(ctx):
     await ctx.send("This is a test")
+
+async def send_offline_message():
+    await ctx.send("Server offline")
 
 bot.run(os.getenv("DISCORDMCBOT"))

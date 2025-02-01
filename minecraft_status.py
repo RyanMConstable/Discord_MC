@@ -4,6 +4,15 @@ from dotenv import load_dotenv
 from mcstatus import JavaServer
 import subprocess
 import os
+import pika
+
+def send_to_queue():
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='mc_status')
+    channel.basic_publish(exchange='', routing_key='mc_status', body='Server closed')
+    print(" [x] Sent server closed ")
+    connection.close()
 
 if __name__ == "__main__":
     load_dotenv('/home/president/minecraft/.env')
@@ -31,6 +40,8 @@ if __name__ == "__main__":
             os.system("rm /home/president/minecraft/mcserverps")
             print(mcserverps)
             os.system(f"kill {mcserverps}")
+
+            send_to_queue()
     else:
         if os.path.exists("/home/president/minecraft/test"):
             os.system("rm /home/president/minecraft/test")
