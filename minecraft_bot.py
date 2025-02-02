@@ -8,7 +8,7 @@ import pika
 import aio_pika
 import asyncio
 
-async def receive_message_queue():
+async def receive_message_queue(ctx, messageID):
     connection = await aio_pika.connect_robust('amqp://guest:guest@localhost/')
     async with connection:
         channel = await connection.channel()
@@ -17,8 +17,18 @@ async def receive_message_queue():
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
                 async with message.process():
-                    await bot.get_channel(1321172413060481175).send("Server is going offline")
                     await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
+
+                    message = await ctx.fetch_message(messageID)
+
+                    embed = message.embeds[0]
+                    embed.title = "Session Status: OFFLINE"
+                    embed.color = discord.Color.red()
+
+                    await message.delete()
+
+                    await ctx.send(embed=embed)
+                    await bot.get_channel(ctx.channel.id).send("Server is going offline")
 
 
 load_dotenv("/home/president/minecraft/.env")
@@ -32,7 +42,7 @@ bot = commands.Bot(command_prefix="!",intents=intents) # prefix is the bot comma
 async def on_ready():
     await bot.tree.sync()
     await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
-    await receive_message_queue()
+    #await receive_message_queue()
     print(f"{bot.user} is ready and online!")
 
 @bot.hybrid_command(name="help_mc")
@@ -52,6 +62,15 @@ async def startserver(ctx):
         await bot.change_presence(activity=discord.CustomActivity(name='Server Online'))
     except Exception as e:
         await ctx.send("Failed to start server, check if the server is already running")
+
+    #Below we want to send an embedded message
+    embed = discord.Embed(
+            title="Session Status: ONLINE",
+            description="Under Construction",
+            color=discord.Color.green()
+        )
+    message = await ctx.send(embed=embed)
+    await receive_message_queue(ctx, message.id)
 
 @bot.hybrid_command(name="status")
 async def status(ctx):
