@@ -5,6 +5,14 @@ def return_status():
     server = JavaServer(os.getenv("MYIP"), 25565)
     status = server.status()
 
-    print(status.players)
+    if status.players.sample == None:
+        return "Empty"
 
-return_status()
+    mylist = []
+    for player in status.players.sample:
+        #This actually prints player names
+        mylist.append(player.name)
+
+    return mylist
+
+print(return_status())
