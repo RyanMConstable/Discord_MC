@@ -17,18 +17,20 @@ async def receive_message_queue(ctx, messageID):
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
                 async with message.process():
+                    print(f"Message {message.body}")
                     await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
 
-                    message = await ctx.fetch_message(messageID)
+                    message1 = await ctx.fetch_message(messageID)
 
-                    embed = message.embeds[0]
+                    embed = message1.embeds[0]
                     embed.title = "Session Status: OFFLINE"
                     embed.color = discord.Color.red()
 
-                    await message.delete()
+                    await message1.delete()
 
                     await ctx.send(embed=embed)
                     await bot.get_channel(ctx.channel.id).send("Server is going offline")
+                    return
 
 
 load_dotenv("/home/president/minecraft/.env")

@@ -5,14 +5,23 @@ from mcstatus import JavaServer
 import subprocess
 import os
 import pika
+from current_status import return_status
 
-def send_to_queue():
+def send_close_queue():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
     channel.queue_declare(queue='mc_status')
     channel.basic_publish(exchange='', routing_key='mc_status', body='Server closed')
-    print(" [x] Sent server closed ")
     connection.close()
+
+def send_status_to_queue():
+    """connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='mc_status')
+    channel.basic_publish(exchange='', routing_key='mc_status', body='Server closed')
+    connection.close()"""
+    print(return_status)
+
 
 if __name__ == "__main__":
     load_dotenv('/home/president/minecraft/.env')
@@ -25,6 +34,7 @@ if __name__ == "__main__":
         exit()
 
     players_online = status.players.online
+    send_status_to_queue()
 
     if players_online == 0:
         os.system("echo 0 >> /home/president/minecraft/test")
@@ -41,7 +51,7 @@ if __name__ == "__main__":
             print(mcserverps)
             os.system(f"kill {mcserverps}")
 
-            send_to_queue()
+            send_close_queue()
     else:
         if os.path.exists("/home/president/minecraft/test"):
             os.system("rm /home/president/minecraft/test")
