@@ -9,6 +9,7 @@ import aio_pika
 import asyncio
 
 async def receive_message_queue(ctx, messageID):
+    session_user_list = []
     connection = await aio_pika.connect_robust('amqp://guest:guest@localhost/')
     async with connection:
         channel = await connection.channel()
@@ -17,20 +18,49 @@ async def receive_message_queue(ctx, messageID):
         async with queue.iterator() as queue_iter:
             async for message in queue_iter:
                 async with message.process():
-                    print(f"Message {message.body}")
-                    await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
+                    new_message = message.body.decode('utf-8')
+                    print(new_message)
+                    if new_message == 'Server closed':
+                        print("CLOSING SERVER")
+                        await bot.change_presence(activity=discord.CustomActivity(name='Server Offline'))
 
-                    message1 = await ctx.fetch_message(messageID)
+                        discord_message = await ctx.fetch_message(messageID)
 
-                    embed = message1.embeds[0]
-                    embed.title = "Session Status: OFFLINE"
-                    embed.color = discord.Color.red()
+                        embed = discord_message.embeds[0]
+                        embed.title = "Session Status: OFFLINE"
+                        embed.description = f"No users played"
+                        if session_user_list != []:
+                            embed.description = f"Session Users:\n{'\n'.join(session_user_list)}"
+                        embed.color = discord.Color.red()
 
-                    await message1.delete()
+                        await discord_message.delete()
 
-                    await ctx.send(embed=embed)
-                    await bot.get_channel(ctx.channel.id).send("Server is going offline")
-                    return
+                        await ctx.send(embed=embed)
+                        await bot.get_channel(ctx.channel.id).send("Server is going offline")
+                        return
+                    if new_message == 'Empty':
+                        #Do stuff for empty
+                        discord_message = await ctx.fetch_message(messageID)
+
+                        embed = discord_message.embeds[0]
+                        embed.description = "No Users Online"
+
+                        await discord_message.edit(embed=embed)
+
+
+                    else:
+                        #This is where you get a string of lists
+                        users_online = new_message.split(" ")
+                        for user in users_online:
+                            if user not in session_user_list:
+                                session_user_list.append(user)
+
+                        discord_message = await ctx.fetch_message(messageID)
+
+                        embed = discord_message.embeds[0]
+                        embed.description = f"User List:\n{'\n'.join(users_online)}"
+
+                        await discord_message.edit(embed=embed)
 
 
 load_dotenv("/home/president/minecraft/.env")
@@ -68,7 +98,7 @@ async def startserver(ctx):
     #Below we want to send an embedded message
     embed = discord.Embed(
             title="Session Status: ONLINE",
-            description="Under Construction",
+            description="Starting Server...",
             color=discord.Color.green()
         )
     message = await ctx.send(embed=embed)

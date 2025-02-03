@@ -15,12 +15,11 @@ def send_close_queue():
     connection.close()
 
 def send_status_to_queue():
-    """connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
     channel = connection.channel()
     channel.queue_declare(queue='mc_status')
-    channel.basic_publish(exchange='', routing_key='mc_status', body='Server closed')
-    connection.close()"""
-    print(return_status)
+    channel.basic_publish(exchange='', routing_key='mc_status', body=f'{return_status()}')
+    connection.close()
 
 
 if __name__ == "__main__":

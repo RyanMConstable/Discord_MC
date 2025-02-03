@@ -14,8 +14,6 @@ def return_status():
             #This actually prints player names
             mylist.append(player.name)
 
-        return mylist
+        return " ".join(mylist)
     except Exception as e:
         return -1
-
-print(return_status())
